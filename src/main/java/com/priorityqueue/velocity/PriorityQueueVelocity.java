@@ -96,6 +96,18 @@ public class PriorityQueueVelocity {
         }
     }
 
+    @Subscribe
+    public void onProxyShutdown(com.velocitypowered.api.event.proxy.ProxyShutdownEvent event) {
+        log.info("PriorityQueue shutting down...");
+        stopPositionUpdateScheduler();
+        if (queueManager != null) {
+            queueManager.stop();
+        }
+        if (database != null) {
+            database.close();
+        }
+    }
+
     @Subscribe(order = PostOrder.LAST)
     public void onServerPreConnect(ServerPreConnectEvent event) {
         Player player = event.getPlayer();

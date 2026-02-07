@@ -77,8 +77,9 @@ public class Database {
 
     public void savePriority(String uuid, int priority) {
         String sql = """
-            INSERT OR REPLACE INTO priority_cache (uuid, priority, last_updated)
+            INSERT INTO priority_cache (uuid, priority, last_updated)
             VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE priority = VALUES(priority), last_updated = CURRENT_TIMESTAMP
             """;
 
         try (Connection connection = dataSource.getConnection();
