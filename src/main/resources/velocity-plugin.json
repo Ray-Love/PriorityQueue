@@ -1,0 +1,37 @@
+{
+  "id": "priorityqueue",
+  "name": "PriorityQueue",
+  "version": "${version}",
+  "description": "A priority queue plugin for Velocity",
+  "authors": ["YourName"],
+  "main": "com.priorityqueue.velocity.PriorityQueueVelocity",
+  "dependencies": [],
+  "permissions": {
+    "priorityqueue.*": {
+      "description": "All permissions",
+      "default": false
+    },
+    "priorityqueue.bypass": {
+      "description": "Bypass the queue",
+      "default": "op"
+    },
+    "priorityqueue.vip": {
+      "description": "VIP priority",
+      "default": "false"
+    },
+    "priorityqueue.mvp": {
+      "description": "MVP priority",
+      "default": "false"
+    },
+    "priorityqueue.admin": {
+      "description": "Admin priority",
+      "default": "op"
+    }
+  },
+  "commands": {
+    "queue": {
+      "description": "Queue commands",
+      "aliases": ["pq", "q"]
+    }
+  }
+}

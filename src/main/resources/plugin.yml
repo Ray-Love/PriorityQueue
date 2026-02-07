@@ -1,0 +1,34 @@
+name: PriorityQueue
+version: ${version}
+main: com.priorityqueue.bungee.PriorityQueueBungee
+author: YourName
+description: A priority queue plugin for BungeeCord/Waterfall
+
+softdepend: []
+
+commands:
+  queue:
+    description: Queue commands
+    aliases: [pq, q]
+    usage: /queue [leave|info|reload]
+
+permissions:
+  priorityqueue.*:
+    description: All permissions
+    children:
+      priorityqueue.bypass: true
+      priorityqueue.vip: true
+      priorityqueue.mvp: true
+      priorityqueue.admin: true
+  priorityqueue.bypass:
+    description: Bypass the queue
+    default: op
+  priorityqueue.vip:
+    description: VIP priority
+    default: false
+  priorityqueue.mvp:
+    description: MVP priority
+    default: false
+  priorityqueue.admin:
+    description: Admin priority
+    default: op

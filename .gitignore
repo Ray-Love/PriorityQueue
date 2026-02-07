@@ -1,0 +1,37 @@
+# Build output
+build/
+.gradle/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+target/
+
+# Logs
+*.log
+
+# Eclipse
+bin/
+.settings/
+.classpath
+.project
+
+# NetBeans
+nbproject/
+build.xml
+nbbuild/
+dist/
+nbdist/

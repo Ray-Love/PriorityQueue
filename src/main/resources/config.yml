@@ -1,0 +1,48 @@
+# PriorityQueue Configuration
+
+queue:
+  # Maximum queue size
+  max-size: 1000
+  # Players to let in per interval
+  slots-per-interval: 5
+  # Interval in milliseconds
+  interval: 3000
+  # Target server to connect to
+  target-server: "survival"
+  # Show queue position update in chat (seconds, 0 = disabled)
+  position-update-interval: 5
+
+priority:
+  # Default priority for players without special permissions
+  default: 0
+  # Priority levels (higher = higher priority)
+  levels:
+    vip: 1
+    mvp: 2
+    admin: 3
+
+messages:
+  # 2b2t style queue messages
+  queue-join: "&7Connected to the queue. Position: &e{position}"
+  queue-position: "&7Position in queue: &e{position}"
+  queue-position-update: "&7Position in queue: &e{position} / {total}"
+  queue-complete: "&7You are next! Connecting..."
+  queue-left: "&7You have been removed from the queue."
+  queue-full: "&cQueue is full. Try again later."
+  queue-info: "&7=== Queue Info ===&r\n&7Queue size: &e{size}\n&7Slots per interval: &e{slots}\n&7Interval: &e{interval}ms"
+  no-permission: "&cYou don't have permission to use this command."
+  config-reloaded: "&aConfiguration reloaded successfully."
+
+database:
+  # Database type: sqlite (default) or mysql
+  type: sqlite
+  # SQLite settings
+  sqlite:
+    path: "plugins/PriorityQueue/queue.db"
+  # MySQL settings (if using MySQL)
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "priorityqueue"
+    username: "root"
+    password: "password"
