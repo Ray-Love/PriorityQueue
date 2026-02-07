@@ -21,18 +21,28 @@ public class Database {
 
         String type = config.getTargetServer() != null ? "sqlite" : "sqlite";
 
+        String driverClassName = null;
         if ("mysql".equalsIgnoreCase(type)) {
             // MySQL configuration
             hikariConfig.setJdbcUrl("jdbc:mysql://" +
                     config.getTargetServer() + ":3306/priorityqueue");
             hikariConfig.setUsername("root");
             hikariConfig.setPassword("password");
-            hikariConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
+            driverClassName = "com.mysql.cj.jdbc.Driver";
         } else {
             // SQLite configuration
             String dbPath = new File(dataFolder, "queue.db").getAbsolutePath();
             hikariConfig.setJdbcUrl("jdbc:sqlite:" + dbPath);
-            hikariConfig.setDriverClassName("org.sqlite.JDBC");
+            driverClassName = "org.sqlite.JDBC";
+        }
+
+        // Load driver class explicitly
+        try {
+            Class.forName(driverClassName);
+            hikariConfig.setDriverClassName(driverClassName);
+        } catch (ClassNotFoundException e) {
+            log.error("Failed to load driver class: " + driverClassName, e);
+            throw new RuntimeException("Failed to load driver class: " + driverClassName, e);
         }
 
         hikariConfig.setMaximumPoolSize(10);
