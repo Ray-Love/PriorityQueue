@@ -1,0 +1,80 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          gradle-version: wrapper
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/libs/*.jar
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## PriorityQueue v${{ steps.get_version.outputs.VERSION }}
+
+            ### 📦 Downloads
+            - `PriorityQueue-${{ steps.get_version.outputs.VERSION }}.jar` - Plugin file
+
+            ### ✨ Features
+            - Support for Velocity, BungeeCord, and Waterfall
+            - Priority queue system with multiple levels
+            - Automatic queue position updates in chat
+            - Configurable queue size and batch intervals
+            - Database persistent storage
+            - Permission-based priority system
+
+            ### 📝 Installation
+            1. Download the plugin jar file
+            2. Place it in your proxy server's `plugins/` folder
+            3. Restart the server
+            4. Configure `plugins/PriorityQueue/config.yml`
+            5. Reload config with `/queue reload`
+
+            ### 🚀 Quick Start
+            See [INSTALL.md](https://github.com/Ray-Love/PriorityQueue/blob/main/INSTALL.md) for detailed installation guide.
+
+            ---
+            Full changelog: https://github.com/Ray-Love/PriorityQueue/commits/main
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-jar
+          path: build/libs/*.jar
+          retention-days: 30
