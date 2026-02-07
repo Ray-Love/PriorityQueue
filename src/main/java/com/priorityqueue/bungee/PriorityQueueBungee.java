@@ -148,14 +148,46 @@ public class PriorityQueueBungee extends Plugin {
         player.sendMessage(formatMessage(message, placeholders));
     }
 
+    private void startPositionUpdateScheduler() {
+        if (positionUpdateScheduler != null && !positionUpdateScheduler.isShutdown()) {
+            return;
+        }
+        positionUpdateScheduler = Executors.newSingleThreadScheduledExecutor();
+        positionUpdateScheduler.scheduleAtFixedRate(() -> {
+            for (Map.Entry<java.util.UUID, QueuePlayer> entry : waitingPlayers.entrySet()) {
+                ProxiedPlayer player = getProxy().getPlayer(entry.getKey());
+                if (player != null && player.isConnected()) {
+                    int position = queueManager.getQueue().getPlayerPosition(entry.getKey());
+                    if (position > 0) {
+                        sendMessage(player, config.getMessageQueuePosition(),
+                                Map.of("position", String.valueOf(position)));
+                    }
+                }
+            }
+        }, 5, 5, TimeUnit.SECONDS);
+    }
+
+    private void stopPositionUpdateScheduler() {
+        if (positionUpdateScheduler != null && !positionUpdateScheduler.isShutdown()) {
+            positionUpdateScheduler.shutdown();
+            try {
+                if (!positionUpdateScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    positionUpdateScheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                positionUpdateScheduler.shutdownNow();
+            }
+        }
+    }
+
     private class QueueListener implements Listener {
         @EventHandler(priority = net.md_5.bungee.event.EventPriority.LOWEST)
         public void onServerConnect(ServerConnectEvent event) {
-            if (!(event.getSender() instanceof ProxiedPlayer)) {
+            if (!(event.getPlayer() instanceof ProxiedPlayer)) {
                 return;
             }
 
-            ProxiedPlayer player = (ProxiedPlayer) event.getSender();
+            ProxiedPlayer player = event.getPlayer();
             ServerInfo targetServer = event.getTarget();
 
             // Check if connecting to target server
