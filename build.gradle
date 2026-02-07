@@ -55,7 +55,6 @@ shadowJar {
     minimize()
     relocate 'net.kyori', 'com.priorityqueue.lib.kyori'
     relocate 'org.spongepowered.configurate', 'com.priorityqueue.lib.configurate'
-    relocate 'com.zaxxer', 'com.priorityqueue.lib.hikari'
 }
 
 tasks.build {
