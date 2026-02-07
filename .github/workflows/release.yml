@@ -52,6 +52,7 @@ jobs:
         with:
           files: build/libs/*.jar
           name: Release ${{ steps.get_version.outputs.VERSION }}
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
           body: |
             ## PriorityQueue ${{ steps.get_version.outputs.VERSION }}
 
