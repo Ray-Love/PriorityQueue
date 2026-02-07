@@ -46,9 +46,6 @@ public class PriorityQueueVelocity {
         this.dataFolder = dataFolder;
         this.logger = logger;
         this.waitingPlayers = new ConcurrentHashMap<>();
-
-        proxy.getEventManager().register(this, this);
-        proxy.getCommandManager().register("queue", new QueueCommand(), "pq", "q");
     }
 
     @Subscribe
@@ -89,6 +86,15 @@ public class PriorityQueueVelocity {
 
             // Start position update scheduler
             startPositionUpdateScheduler();
+
+            // Register command
+            proxy.getCommandManager().register(
+                proxy.getCommandManager().metaBuilder("queue")
+                    .plugin(this)
+                    .build(),
+                new QueueCommand(),
+                "pq", "q"
+            );
 
             log.info("PriorityQueue loaded successfully!");
         } catch (Exception e) {
