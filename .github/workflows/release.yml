@@ -2,8 +2,8 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -31,9 +31,13 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      - name: Get version from tag
+      - name: Get version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: |
+          # Generate version from date and commit
+          VERSION="v$(date +'%Y.%m.%d')-${GITHUB_SHA::7}"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Generated version: $VERSION"
 
       - name: Create Release
         id: create_release
@@ -42,10 +46,14 @@ jobs:
           files: build/libs/*.jar
           name: Release ${{ steps.get_version.outputs.VERSION }}
           body: |
-            ## PriorityQueue v${{ steps.get_version.outputs.VERSION }}
+            ## PriorityQueue ${{ steps.get_version.outputs.VERSION }}
 
             ### 📦 Downloads
-            - `PriorityQueue-${{ steps.get_version.outputs.VERSION }}.jar` - Plugin file
+            - `PriorityQueue-*.jar` - Plugin file
+
+            ### 📌 Build Info
+            - Commit: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
 
             ### ✨ Features
             - Support for Velocity, BungeeCord, and Waterfall
