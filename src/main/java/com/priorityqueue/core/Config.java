@@ -19,6 +19,14 @@ public class Config {
     private String targetServer;
     private int positionUpdateInterval;
 
+    // Database settings
+    private String databaseType;
+    private String dbHost;
+    private int dbPort;
+    private String dbDatabase;
+    private String dbUsername;
+    private String dbPassword;
+
     // Priority settings
     private int defaultPriority;
     private Map<String, Integer> priorityLevels;
@@ -49,6 +57,14 @@ public class Config {
         config.interval = node.node("queue", "interval").getInt(3000);
         config.targetServer = node.node("queue", "target-server").getString("survival");
         config.positionUpdateInterval = node.node("queue", "position-update-interval").getInt(5);
+
+        // Load database settings
+        config.databaseType = node.node("database", "type").getString("sqlite");
+        config.dbHost = node.node("database", "mysql", "host").getString("localhost");
+        config.dbPort = node.node("database", "mysql", "port").getInt(3306);
+        config.dbDatabase = node.node("database", "mysql", "database").getString("priorityqueue");
+        config.dbUsername = node.node("database", "mysql", "username").getString("root");
+        config.dbPassword = node.node("database", "mysql", "password").getString("password");
 
         // Load priority settings
         config.defaultPriority = node.node("priority", "default").getInt(0);

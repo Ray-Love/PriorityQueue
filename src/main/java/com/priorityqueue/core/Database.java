@@ -19,15 +19,18 @@ public class Database {
     public Database(File dataFolder, Config config) {
         HikariConfig hikariConfig = new HikariConfig();
 
-        String type = config.getTargetServer() != null ? "sqlite" : "sqlite";
-
+        String type = config.getDatabaseType() != null ? config.getDatabaseType() : "sqlite";
         String driverClassName = null;
+
         if ("mysql".equalsIgnoreCase(type)) {
             // MySQL configuration
-            hikariConfig.setJdbcUrl("jdbc:mysql://" +
-                    config.getTargetServer() + ":3306/priorityqueue");
-            hikariConfig.setUsername("root");
-            hikariConfig.setPassword("password");
+            String jdbcUrl = String.format("jdbc:mysql://%s:%d/%s",
+                    config.getDbHost(),
+                    config.getDbPort(),
+                    config.getDbDatabase());
+            hikariConfig.setJdbcUrl(jdbcUrl);
+            hikariConfig.setUsername(config.getDbUsername());
+            hikariConfig.setPassword(config.getDbPassword());
             driverClassName = "com.mysql.cj.jdbc.Driver";
         } else {
             // SQLite configuration
