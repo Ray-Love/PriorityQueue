@@ -154,17 +154,22 @@ public class PriorityQueueBungee extends Plugin {
         }
         positionUpdateScheduler = Executors.newSingleThreadScheduledExecutor();
         positionUpdateScheduler.scheduleAtFixedRate(() -> {
-            for (Map.Entry<java.util.UUID, QueuePlayer> entry : waitingPlayers.entrySet()) {
-                ProxiedPlayer player = getProxy().getPlayer(entry.getKey());
-                if (player != null && player.isConnected()) {
-                    int position = queueManager.getQueue().getPlayerPosition(entry.getKey());
-                    if (position > 0) {
-                        sendMessage(player, config.getMessageQueuePosition(),
-                                Map.of("position", String.valueOf(position)));
+            try {
+                for (Map.Entry<java.util.UUID, QueuePlayer> entry : waitingPlayers.entrySet()) {
+                    ProxiedPlayer player = getProxy().getPlayer(entry.getKey());
+                    if (player != null && player.isConnected()) {
+                        int position = queueManager.getQueue().getPlayerPosition(entry.getKey());
+                        int total = queueManager.getQueue().getQueueSize();
+                        if (position > 0) {
+                            sendMessage(player, config.getMessageQueuePositionUpdate(),
+                                    Map.of("position", String.valueOf(position), "total", String.valueOf(total)));
+                        }
                     }
                 }
+            } catch (Exception e) {
+                log.error("Error updating queue positions", e);
             }
-        }, 5, 5, TimeUnit.SECONDS);
+        }, config.getPositionUpdateInterval(), config.getPositionUpdateInterval(), TimeUnit.SECONDS);
     }
 
     private void stopPositionUpdateScheduler() {
@@ -258,38 +263,38 @@ public class PriorityQueueBungee extends Plugin {
                 // Leave queue
                 if (queueManager.getQueue().removeFromQueue(player.getUniqueId()) != null) {
                     sendMessage(player, config.getMessageQueueLeft(), Map.of());
-                } else {
-                    sendMessage(player, ChatColor.RED + "You are not in the queue.", Map.of());
-                }
-            } else if (args[0].equalsIgnoreCase("info")) {
-                // Show queue info
-                String info = formatMessage(config.getMessageQueueInfo(), Map.of(
-                        "size", String.valueOf(queueManager.getQueue().getQueueSize()),
-                        "slots", String.valueOf(config.getSlotsPerInterval()),
-                        "interval", String.valueOf(config.getInterval())
-                ));
-                player.sendMessage(info);
-            } else if (args[0].equalsIgnoreCase("reload")) {
-                // Reload config (admin only)
-                if (!player.hasPermission("priorityqueue.admin")) {
-                    sendMessage(player, config.getMessageNoPermission(), Map.of());
-                    return;
-                }
-
-                try {
-                    File configFile = new File(getDataFolder(), "config.yml");
-                    config = Config.load(configFile);
-                    stopPositionUpdateScheduler();
-                    startPositionUpdateScheduler();
-                    queueManager.restart();
-                    sendMessage(player, config.getMessageConfigReloaded(), Map.of());
-                } catch (Exception e) {
-                    log.error("Failed to reload config", e);
-                    player.sendMessage(ChatColor.RED + "Failed to reload config: " + e.getMessage());
-                }
             } else {
-                sendMessage(player, ChatColor.YELLOW + "Usage: /queue [leave|info|reload]", Map.of());
+                sendMessage(player, ChatColor.RED + "You are not in the queue.");
             }
+        } else if (args[0].equalsIgnoreCase("info")) {
+            // Show queue info
+            String info = formatMessage(config.getMessageQueueInfo(), Map.of(
+                    "size", String.valueOf(queueManager.getQueue().getQueueSize()),
+                    "slots", String.valueOf(config.getSlotsPerInterval()),
+                    "interval", String.valueOf(config.getInterval())
+            ));
+            player.sendMessage(info);
+        } else if (args[0].equalsIgnoreCase("reload")) {
+            // Reload config (admin only)
+            if (!player.hasPermission("priorityqueue.admin")) {
+                sendMessage(player, config.getMessageNoPermission());
+                return;
+            }
+
+            try {
+                File configFile = new File(getDataFolder(), "config.yml");
+                config = Config.load(configFile);
+                stopPositionUpdateScheduler();
+                startPositionUpdateScheduler();
+                queueManager.restart();
+                sendMessage(player, config.getMessageConfigReloaded());
+            } catch (Exception e) {
+                log.error("Failed to reload config", e);
+                player.sendMessage(ChatColor.RED + "Failed to reload config: " + e.getMessage());
+            }
+        } else {
+            sendMessage(player, ChatColor.YELLOW + "Usage: /queue [leave|info|reload]");
+        }
         }
     }
 }

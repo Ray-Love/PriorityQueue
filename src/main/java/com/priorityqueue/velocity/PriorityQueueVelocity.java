@@ -230,22 +230,10 @@ public class PriorityQueueVelocity {
     private void sendMessage(Player player, String message, Map<String, String> placeholders) {
         String formatted = config.formatMessage(message, placeholders);
         // Convert legacy color codes to Adventure components
-        formatted = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+        net.kyori.adventure.text.Component component = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
                 .legacyAmpersand()
-                .serialize(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                        .legacyAmpersand()
-                        .deserialize(formatted));
-
-        Component component = MiniMessage.miniMessage().deserialize(
-                net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                        .legacyAmpersand()
-                        .deserialize(formatted)
-                        .toString()
-        );
-
-        player.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                .legacyAmpersand()
-                .deserialize(formatted));
+                .deserialize(formatted);
+        player.sendMessage(component);
     }
 
     private class QueueCommand implements SimpleCommand {
