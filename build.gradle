@@ -42,6 +42,10 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+jar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
