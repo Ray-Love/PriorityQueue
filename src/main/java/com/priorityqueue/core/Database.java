@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.DriverManager;
 
 @Slf4j
 public class Database {
@@ -26,10 +27,12 @@ public class Database {
                     config.getTargetServer() + ":3306/priorityqueue");
             hikariConfig.setUsername("root");
             hikariConfig.setPassword("password");
+            hikariConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
         } else {
             // SQLite configuration
             String dbPath = new File(dataFolder, "queue.db").getAbsolutePath();
             hikariConfig.setJdbcUrl("jdbc:sqlite:" + dbPath);
+            hikariConfig.setDriverClassName("org.sqlite.JDBC");
         }
 
         hikariConfig.setMaximumPoolSize(10);
