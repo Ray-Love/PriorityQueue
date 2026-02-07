@@ -1,15 +1,12 @@
 package com.priorityqueue.velocity;
 
 import com.google.inject.Inject;
-import com.mojang.brigadier.Command;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
 import com.priorityqueue.core.Config;
 import com.priorityqueue.core.Database;
 import com.priorityqueue.core.QueueManager;
 import com.priorityqueue.core.QueuePlayer;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
@@ -88,12 +85,11 @@ public class PriorityQueueVelocity {
             // Start position update scheduler
             startPositionUpdateScheduler();
 
-            // Register command using Brigadier
-            Command<CommandSource> queueCommand = buildQueueCommand();
+            // Register command
+            QueueCommand queueCommand = new QueueCommand();
             proxy.getCommandManager().register(
                 proxy.getCommandManager().metaBuilder("queue")
                     .plugin(this)
-                    .aliases("pq", "q")
                     .build(),
                 queueCommand
             );
@@ -256,52 +252,37 @@ public class PriorityQueueVelocity {
         player.sendMessage(component);
     }
 
-    private Command<CommandSource> buildQueueCommand() {
-        LiteralArgumentBuilder<CommandSource> queueCommand = LiteralArgumentBuilder.literal("queue");
+    private class QueueCommand implements SimpleCommand {
+        @Override
+        public void execute(Invocation invocation) {
+            CommandSource source = invocation.source();
+            String[] args = invocation.arguments();
 
-        // /queue (show position)
-        queueCommand.executes(ctx -> {
-            if (!(ctx.getSource() instanceof Player)) {
-                ctx.getSource().sendMessage(Component.text("This command can only be used by players."));
-                return 1;
+            if (!(source instanceof Player)) {
+                source.sendMessage(Component.text("This command can only be used by players."));
+                return;
             }
-            Player player = (Player) ctx.getSource();
-            if (queueManager.getQueue().isInQueue(player.getUniqueId())) {
-                int position = queueManager.getQueue().getPlayerPosition(player.getUniqueId());
-                sendMessage(player, config.getMessageQueuePosition(),
-                        Map.of("position", String.valueOf(position)));
-            } else {
-                sendMessage(player, config.getMessageQueueLeft(), Map.of());
-            }
-            return 1;
-        });
 
-        // /queue leave
-        queueCommand.then(LiteralArgumentBuilder.literal("leave")
-            .executes(ctx -> {
-                if (!(ctx.getSource() instanceof Player)) {
-                    ctx.getSource().sendMessage(Component.text("This command can only be used by players."));
-                    return 1;
+            Player player = (Player) source;
+
+            if (args.length == 0) {
+                // Show queue position
+                if (queueManager.getQueue().isInQueue(player.getUniqueId())) {
+                    int position = queueManager.getQueue().getPlayerPosition(player.getUniqueId());
+                    sendMessage(player, config.getMessageQueuePosition(),
+                            Map.of("position", String.valueOf(position)));
+                } else {
+                    sendMessage(player, config.getMessageQueueLeft(), Map.of());
                 }
-                Player player = (Player) ctx.getSource();
+            } else if (args[0].equalsIgnoreCase("leave")) {
+                // Leave queue
                 if (queueManager.getQueue().removeFromQueue(player.getUniqueId()) != null) {
                     sendMessage(player, config.getMessageQueueLeft(), Map.of());
                 } else {
                     sendMessage(player, "You are not in the queue.", Map.of());
                 }
-                return 1;
-            })
-            .build()
-        );
-
-        // /queue info
-        queueCommand.then(LiteralArgumentBuilder.literal("info")
-            .executes(ctx -> {
-                if (!(ctx.getSource() instanceof Player)) {
-                    ctx.getSource().sendMessage(Component.text("This command can only be used by players."));
-                    return 1;
-                }
-                Player player = (Player) ctx.getSource();
+            } else if (args[0].equalsIgnoreCase("info")) {
+                // Show queue info
                 String info = config.formatMessage(config.getMessageQueueInfo(), Map.of(
                         "size", String.valueOf(queueManager.getQueue().getQueueSize()),
                         "slots", String.valueOf(config.getSlotsPerInterval()),
@@ -310,20 +291,13 @@ public class PriorityQueueVelocity {
                 player.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
                         .legacyAmpersand()
                         .deserialize(info));
-                return 1;
-            })
-            .build()
-        );
-
-        // /queue reload
-        queueCommand.then(LiteralArgumentBuilder.literal("reload")
-            .requires(source -> source.hasPermission("priorityqueue.admin"))
-            .executes(ctx -> {
-                if (!(ctx.getSource() instanceof Player)) {
-                    ctx.getSource().sendMessage(Component.text("This command can only be used by players."));
-                    return 1;
+            } else if (args[0].equalsIgnoreCase("reload")) {
+                // Reload config (admin only)
+                if (!player.hasPermission("priorityqueue.admin")) {
+                    sendMessage(player, config.getMessageNoPermission(), Map.of());
+                    return;
                 }
-                Player player = (Player) ctx.getSource();
+
                 try {
                     File configFile = new File(dataFolder.toFile(), "config.yml");
                     config = Config.load(configFile);
@@ -335,11 +309,17 @@ public class PriorityQueueVelocity {
                     log.error("Failed to reload config", e);
                     player.sendMessage(Component.text("Failed to reload config: " + e.getMessage()));
                 }
-                return 1;
-            })
-            .build()
-        );
+            } else {
+                sendMessage(player, "Usage: /queue [leave|info|reload]", Map.of());
+            }
+        }
 
-        return queueCommand.build();
+        @Override
+        public boolean hasPermission(Invocation invocation) {
+            if (invocation.arguments().length > 0 && invocation.arguments()[0].equalsIgnoreCase("reload")) {
+                return invocation.source().hasPermission("priorityqueue.admin");
+            }
+            return true;
+        }
     }
 }
