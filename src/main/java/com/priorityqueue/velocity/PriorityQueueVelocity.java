@@ -88,13 +88,7 @@ public class PriorityQueueVelocity {
             startPositionUpdateScheduler();
 
             // Register command
-            proxy.getCommandManager().register(
-                proxy.getCommandManager().metaBuilder("queue")
-                    .plugin(this)
-                    .build(),
-                new QueueCommand(),
-                "pq", "q"
-            );
+            proxy.getCommandManager().register("queue", new QueueCommand(), "pq", "q");
 
             log.info("PriorityQueue loaded successfully!");
         } catch (Exception e) {
